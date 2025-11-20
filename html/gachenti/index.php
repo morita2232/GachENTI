@@ -1,5 +1,8 @@
 <?php
 
+
+session_start();
+
 require("template.php");
 
 $title = "GachENTI!";

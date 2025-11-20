@@ -100,7 +100,13 @@ if (!$ins_res) {
 
 $last_id = mysqli_insert_id($conn);
 
-echo "Usuario insertado correctamente. ID: " . intval($last_id);
+session_start();
+
+$_SESSION["id_user"] = $last_id;
+
+header("Location: dashboard.php");
+
+exit();
 
 mysqli_close($conn);
 ?>

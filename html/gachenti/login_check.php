@@ -65,20 +65,14 @@ die("Error 6: El usuario o el password son erroneos");
 
 $user = mysqli_fetch_assoc($result);
 
-echo $user["id_user"];
+//echo $user["id_user"];
 
+session_start();
 
+$_SESSION["id_user"] = $user["id_user"];
 
+header("Location: dashboard.php");
 
-
-
-
-
-
-
-
-
-
-
+exit();
 
 ?>
