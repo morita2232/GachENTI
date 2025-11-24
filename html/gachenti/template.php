@@ -3,16 +3,15 @@
 function openHTML ($title = "", $id="")
 {
 
-	if ($title == ""){
-		$title = "gachENTI: Tu Gacha de cartas de profes de ENTI";
-	}
+    if ($title == ""){
+        $title = "gachENTI: Tu Gacha de cartas de profes de ENTI";
+    }
 
-$html_id = "";
+    $html_id = "";
 
-	if ($id != ""){
-		$html_id = " id=\"".$id."\"";
-	}
-
+    if ($id != ""){
+        $html_id = " id=\"".$id."\"";
+    }
 
 echo <<<EOD
 <!doctype html>
@@ -21,7 +20,22 @@ echo <<<EOD
 
 <head>
 
-<title>{$title}</title>
+    <meta charset="utf-8" />
+    <title>{$title}</title>
+
+    <style>
+
+        .card-img {
+            max-width: 180px;  /* cambia a 150, 200... si quieres más pequeño/grande */
+            height: auto;
+            border-radius: 6px;
+            display: block;
+        }
+
+        article {
+            margin-bottom: 1rem;
+        }
+    </style>
 
 </head>
 
@@ -36,7 +50,7 @@ function writeHeader ()
 $login_logout = <<<EOD
 
 
-		<li><a href="login.php">Login/Registro</a></li>
+        <li><a href="login.php">Login/Registro</a></li>
 EOD;
 
 
@@ -45,8 +59,8 @@ if (isset($_SESSION["id_user"])){
 $login_logout = <<<EOD
 
 
-		<li><a href="dashboard.php">Dashboard</a></li>
-		<li><a href="logout.php">Log out/Registro</a></li>
+        <li><a href="dashboard.php">Dashboard</a></li>
+        <li><a href="logout.php">Log out/Registro</a></li>
 
 EOD;
 
@@ -55,18 +69,18 @@ EOD;
 echo <<<EOD
 <header>
 
-	<h1>gachENTI</h1>
+    <h1>gachENTI</h1>
 
 <nav>
 
-	<menu>
+    <menu>
 
-		<li><a href="index.php">Portada</a></li>
-		<li><a href="cards.php">Cartas</a></li>
-		<li><a href="shop.php">Compra/Venta</a></li>
-		{$login_logout}
+        <li><a href="index.php">Portada</a></li>
+        <li><a href="cards.php">Cartas</a></li>
+        <li><a href="shop.php">Compra/Venta</a></li>
+        {$login_logout}
 
-	</menu>
+    </menu>
 
 </nav>
 
@@ -103,3 +117,4 @@ EOD;
 }
 
 ?>
+
