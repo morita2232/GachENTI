@@ -26,7 +26,7 @@ echo <<<EOD
     <style>
 
         .card-img {
-            max-width: 180px;  /* cambia a 150, 200... si quieres más pequeño/grande */
+            max-width: 180px;
             height: auto;
             border-radius: 6px;
             display: block;
