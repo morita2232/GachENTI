@@ -22,20 +22,9 @@ echo <<<EOD
 
     <meta charset="utf-8" />
     <title>{$title}</title>
+	
 
-    <style>
-
-        .card-img {
-            max-width: 180px;
-            height: auto;
-            border-radius: 6px;
-            display: block;
-        }
-
-        article {
-            margin-bottom: 1rem;
-        }
-    </style>
+	<link rel="stylesheet" href="gachenti.css" />
 
 </head>
 

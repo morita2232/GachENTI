@@ -35,8 +35,14 @@ SELECT
     card_templates.description AS description,
     card_templates.image AS card_image,
     t.type AS card_type,
-    r.rarity AS card_rarity
+	r.rarity AS card_rarity,
+	user_cards.id_user AS user_id,
+	users.username AS user_name
 FROM cards
+LEFT JOIN user_cards
+	ON cards.id_card = user_cards.id_card
+LEFT JOIN users
+	ON user_cards.id_user = users.id_user 
 LEFT JOIN card_templates 
     ON cards.id_card_template = card_templates.id_card_template
 LEFT JOIN card_types t 
@@ -69,12 +75,15 @@ if (mysqli_num_rows($res) === 0) {
         $ctype    = htmlspecialchars((string)$row["card_type"]);
         $crarity  = htmlspecialchars((string)$row["card_rarity"]);
         $img      = htmlspecialchars((string)$row["card_image"]);
+		$user_id  = htmlspecialchars((string)$row["user_id"]);
+		$user_name= htmlspecialchars((string)$row["user_name"]);
 
         $cards_html .= "<li><article>
             <h3>{$name} (ID carta: {$id_card})</h3>
             <p><strong>Tipo:</strong> {$ctype} — <strong>Rareza:</strong> {$crarity}</p>
-            <p><strong>Precio:</strong> {$price} €</p>";
-
+            <p><strong>Precio:</strong> {$price} €</p>
+			<p><strong>Nombre de propietario:</strong> {$user_name} </p>
+			<p><strong>Id del propietario:</strong> {$user_id} </p>";
         if (!empty($img)) {
             $cards_html .= "
             <figure>
@@ -85,6 +94,15 @@ if (mysqli_num_rows($res) === 0) {
         if (!empty($desc)) {
             $cards_html .= "<p>{$desc}</p>";
         }
+
+$cards_html .= "
+    <form method=\"POST\" action=\"card_buy.php\">
+        <input type=\"hidden\" name=\"id_user\" value=\"{$user_id}\" />
+        <input type=\"hidden\" name=\"id_card\" value=\"{$id_card}\" />
+        <input type=\"submit\" value=\"Compra!!!!\"/>
+    </form>";
+
+
 
         $cards_html .= "</article></li>";
     }
