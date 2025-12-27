@@ -1,116 +1,102 @@
 <?php
 session_start();
 
+/* ---------- Session ---------- */
 if (!isset($_SESSION["id_user"])) {
     header("Location: index.php");
     exit();
 }
 
-$id_user = intval($_SESSION["id_user"]);
+$id_user = (int)$_SESSION["id_user"];
 
+/* ---------- Template & config ---------- */
 require("template.php");
 require_once("config.php");
 
 $title = "Get Lucky!";
-$id = "get_lucky";
+$id    = "get_lucky";
 
 openHTML($title, $id);
 writeHeader();
 
+/* ---------- DB ---------- */
 $conn = mysqli_connect($server, $db_user, $db_pass, $db_db);
 if (!$conn) {
-    $datos = "<p>Error DB: no se pudo conectar a la base de datos</p>";
-    writeMain($datos);
+    writeMain("<p>Error DB: no se pudo conectar</p>");
     closeHTML();
     exit;
 }
 
-
+/* ---------- Logic ---------- */
 $num_cards = 5;
+$query_template = "SELECT * FROM card_templates ORDER BY RAND() LIMIT 1";
 
-$query_template = "SELECT * FROM card_templates ORDER BY RAND() LIMIT 1;";
+$datos = "<section><h2>¡Tus nuevas cartas!</h2><article id=\"get_lucky_cards\">";
 
-$datos = "<section><h2>¡Tus nuevas cartas!</h2>";
-
-for ($i = 0; $i < $num_cards; $i++) {
+for ($i = $num_cards; $i > 0; $i--) {
 
     $result = mysqli_query($conn, $query_template);
     if (!$result || mysqli_num_rows($result) === 0) {
-        die("ERROR: NO HAY CARTAS EN LAS PLANTILLAS");
+        die("ERROR: no hay cartas en las plantillas");
     }
 
     $card = mysqli_fetch_assoc($result);
 
+    /* ---------- Card values ---------- */
+    $name  = htmlspecialchars($card["card"]);
+    $img   = htmlspecialchars($card["image"]);
+    $state = rand(80, 100);
 
-    $card_name  = htmlspecialchars($card["card"]);
-    $card_image = htmlspecialchars($card["image"]);
-
-    $card_state = rand(80, 100);
-
-
-    $base_price = 0;
-    if (isset($card["initial_price"])) {
-        $base_price = (int)$card["initial_price"];
-    }
-
-
+    $base_price = isset($card["initial_price"]) ? (int)$card["initial_price"] : rand(5, 20);
     if ($base_price <= 0) {
-
         $base_price = rand(5, 20);
     }
 
+    $min = max(1, $base_price - 4);
+    $max = max($min, $base_price + 4);
+    $price = rand($min, $max);
 
-    $min_price = max(1, $base_price - 4);
-    $max_price = max($min_price, $base_price + 4);
+    /* ---------- Insert card ---------- */
+    $tpl_id = (int)$card["id_card_template"];
 
-    $card_price = rand($min_price, $max_price);
-
-
-    $id_card_template = intval($card["id_card_template"]);
-
-    $query_insert_card = "
-        INSERT INTO cards (price, state, id_card_template)
-        VALUES ({$card_price}, {$card_state}, {$id_card_template});
+    $query = "
+    INSERT INTO cards (price, state, id_card_template)
+    VALUES ({$price}, {$state}, {$tpl_id})
     ";
 
-    $result_insert_card = mysqli_query($conn, $query_insert_card);
-    if (!$result_insert_card) {
-        die("ERROR AL INSERTAR UNA CARTA");
+    if (!mysqli_query($conn, $query)) {
+        die("Error al insertar la carta");
     }
-
 
     $id_card = mysqli_insert_id($conn);
 
-
-    $query_user_card = "
-        INSERT INTO user_cards (id_user, id_card)
-        VALUES ({$id_user}, {$id_card});
+    /* ---------- Assign to user ---------- */
+    $query = "
+    INSERT INTO user_cards (id_user, id_card)
+    VALUES ({$id_user}, {$id_card})
     ";
 
-    $result_user_card = mysqli_query($conn, $query_user_card);
-    if (!$result_user_card) {
-        die("ERROR AL INSERTAR LA CARTA DEL USUARIO");
+    if (!mysqli_query($conn, $query)) {
+        die("Error al asignar la carta al usuario");
     }
 
-
+    /* ---------- Render ---------- */
     $datos .= <<<EOD
-    <article>
-        <h4>{$card_name}</h4>
-        <p><strong>Estado:</strong> {$card_state}</p>
-        <p><strong>Precio:</strong> {$card_price} €</p>
+    <section class="get_lucky_card fade{$i}">
         <figure>
-<img src="imgs/{$card["image"]}" alt="{$card["card"]}" class="card-img" />
-
+            <img src="imgs/{$img}" alt="{$name}" class="card-img">
+            <figcaption>{$name}</figcaption>
         </figure>
-    </article>
+        <p><strong>Estado:</strong> {$state}</p>
+        <p><strong>Precio:</strong> {$price} €</p>
+    </section>
 EOD;
 }
 
-$datos .= "</section>";
+$datos .= "</article></section>";
 
 writeMain($datos);
 
 mysqli_close($conn);
 closeHTML();
-?>
 

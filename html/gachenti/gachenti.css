@@ -1,12 +1,205 @@
-  
-.card-img {
- 	max-width: 180px;
-	height: auto;
-	border-radius: 6px;
-	display: block;
+ html,body{
+margin:0;
+padding:0;
+}
+header{
+color:#fff;
+background-color:#000;
+}
+header h1{
+font-family:sans-serif;
+margin:0;
+padding:4px 8px;
+}
+header nav menu{
+display:flex;
+justify-content:space-evenly;
+padding:0;
+margin:0;
+}
+header nav li{
+margin:0;
+padding:0;
+list-style:none;
+}
+header nav a{
+color:#fff;
+text-decoration:none;
+}
+header nav a:hover{
+color:#ff0;
+text-decoration:underline;
 }
 
-article {
-	margin-bottom: 1rem;
+.card_img{
+width:300px;
+}
+
+h3.section_title{
+text-align:center;
+}
+#get_lucky_cards{
+display:flex;
+justify-content:center;
+}
+#get_lucky_cards figure{
+margin:0;
+}
+.get_lucky_card{
+width:19%;
+transform: translateY(150%);
+opacity: 0;
+animation: 1s fadeIn forwards;
+}
+.get_lucky_card .card_img{
+width:98%;
+}
+
+.fade5{
+animation-delay:0s;
+}
+.fade4{
+animation-delay:1s;
+}
+.fade3{
+animation-delay:2s;
+}
+.fade2{
+animation-delay:3s;
+}
+.fade1{
+animation-delay:5s;
+}
+
+
+
+@keyframes fadeIn{
+  0% {
+    transform: translateY(150%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0%);
+    opacity: 1;
+  }
+}
+
+/* ===== GLOBAL ===== */
+
+.btn {
+    display: inline-block;
+    padding: 0.6rem 1rem;
+    background: #111;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+}
+
+.btn:hover {
+    background: #333;
+}
+
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 0;
+    background-color: #f4f6f8;
+    color: #222;
+}
+
+header, footer {
+    background-color: #111;
+    color: #fff;
+    padding: 1rem;
+}
+
+header h1 {
+    margin: 0;
+}
+
+menu {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+    display: flex;
+    gap: 1rem;
+}
+
+menu li {
+    display: inline;
+}
+
+menu a {
+    color: #fff;
+    text-decoration: none;
+}
+
+main {
+    padding: 2rem;
+}
+
+/* ===== PUBLIC PAGES ===== */
+
+#portada section,
+#cards section {
+    background: #ffffff;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border-radius: 6px;
+}
+
+#cards ul {
+    list-style: none;
+    padding: 0;
+}
+
+#cards li article {
+    border: 1px solid #ddd;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 6px;
+}
+
+.card-img {
+    max-width: 150px;
+    display: block;
+    margin-top: 0.5rem;
+}
+
+/* ===== DASHBOARD ===== */
+
+#dashboard article,
+#dashboard_cards article,
+#get_lucky article {
+    background: #ffffff;
+    padding: 2rem;
+    border-radius: 6px;
+}
+
+#dashboard menu,
+#dashboard_cards menu {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+#dashboard section,
+#dashboard_cards section {
+    margin-top: 1.5rem;
+}
+
+/* ===== GET LUCKY ===== */
+
+#get_lucky_cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.get_lucky_card {
+    background: #fafafa;
+    padding: 1rem;
+    border-radius: 6px;
+    text-align: center;
 }
 

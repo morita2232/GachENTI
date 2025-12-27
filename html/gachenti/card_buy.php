@@ -1,64 +1,118 @@
 <?php
-
 session_start();
 
-require("config.php");
-require("template.php");
 
-if(!isset($_SESSION["id_user"])) {
-
-	header("Location: index.php");
-	exit();
-
+if (!isset($_POST["id_user"], $_POST["id_card"])) {
+    die("Error: formulario no enviado");
 }
 
-$buyer_id = $_SESSION["id_user"];
+$seller_id = intval($_POST["id_user"]);
+$card_id   = intval($_POST["id_card"]);
+
+if ($seller_id <= 0 || $card_id <= 0) {
+    die("Error: datos incorrectos");
+}
+
+
+if (!isset($_SESSION["id_user"])) {
+    header("Location: index.php");
+    exit();
+}
+
+$buyer_id = intval($_SESSION["id_user"]);
+
+if ($buyer_id === $seller_id) {
+    die("Error: no puedes comprar tu propia carta");
+}
+
+
+require_once("config.php");
 
 $conn = mysqli_connect($server, $db_user, $db_pass, $db_db);
-
-if (!$conn) { 
-	die("ERROR DB: no se pudo conectar a la base de datos");
+if (!$conn) {
+    die("ERROR DB: no se pudo conectar a la base de datos");
 }
 
 
+$query = "
+SELECT price
+FROM cards
+WHERE id_card = {$card_id}
+";
 
-$seller_id = $_POST["id_user"];
-$sold_card = $_POST["id_card"];
+$result = mysqli_query($conn, $query);
+if (!$result || mysqli_num_rows($result) !== 1) {
+    die("Error: carta incorrecta");
+}
+
+$card = mysqli_fetch_assoc($result);
+$price = (int)$card["price"];
+
 
 $query = "
 SELECT funds
 FROM users
-WHERE id_user = {$buyer_id}";
+WHERE id_user = {$buyer_id}
+";
 
 $result = mysqli_query($conn, $query);
+if (!$result || mysqli_num_rows($result) !== 1) {
+    die("Error: usuario comprador inválido");
+}
 
 $buyer = mysqli_fetch_assoc($result);
-$buyer_funds = $buyer["funds"];
+if ($buyer["funds"] < $price) {
+    die("Error: fondos insuficientes");
+}
+
+
+mysqli_begin_transaction($conn);
+
 
 $query = "
-UPDATE users u
-JOIN cards c ON c.id_card = {$sold_card}
-SET u.funds = u.funds - c.price
-WHERE u.id_user = {$buyer_id};";
+UPDATE users
+SET funds = funds - {$price}
+WHERE id_user = {$buyer_id}
+";
+if (!mysqli_query($conn, $query)) {
+    mysqli_rollback($conn);
+    die("Error: no se pudo descontar el dinero");
+}
 
-
-$result = mysqli_query($conn, $query);
 
 $query = "
-UPDATE users u
-JOIN cards c ON c.id_card = {$sold_card}
-SET u.funds = u.funds +  c.price
-WHERE u.id_user = {$seller_id};";
+UPDATE users
+SET funds = funds + {$price}
+WHERE id_user = {$seller_id}
+";
+if (!mysqli_query($conn, $query)) {
+    mysqli_rollback($conn);
+    die("Error: no se pudo pagar al vendedor");
+}
 
-$result = mysqli_query($conn, $query);
 
 $query = "
-UPDATE user_cards u
-JOIN cards c ON c.id_card = {$sold_card}
-SET u.id_user = {$buyer_id}
-WHERE u.id_user = {$seller_id};";
+UPDATE user_cards
+SET id_user = {$buyer_id}
+WHERE id_card = {$card_id}
+  AND id_user = {$seller_id}
+";
+if (!mysqli_query($conn, $query)) {
+    mysqli_rollback($conn);
+    die("Error: no se pudo transferir la carta");
+}
 
-$result = mysqli_query($conn, $query);
+mysqli_commit($conn);
 
+$query = "
+INSERT INTO logs
+(price, discount, state, id_user_seller, id_user_buyer, id_card)
+VALUES
+({$price}, 0, 1, {$seller_id}, {$buyer_id}, {$card_id})
+";
 
-?>
+mysqli_query($conn, $query);
+
+header("Location: cards.php");
+exit();
+

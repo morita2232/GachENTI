@@ -10,110 +10,104 @@ $id = "cards";
 openHTML($title, $id);
 writeHeader();
 
-// Conexión DB
+/* ---------- DB connection ---------- */
 $conn = mysqli_connect($server, $db_user, $db_pass, $db_db);
 if (!$conn) {
-    $datos = "<p>Error DB: no se pudo conectar a la base de datos</p>";
-    writeMain($datos);
+    writeMain("<p>Error DB: no se pudo conectar</p>");
     closeHTML();
     exit;
 }
 
-/*
- * Listado de TODAS las cartas reales del sistema,
- * ordenadas por precio (mayor a menor).
- * Precio siempre mínimo 1.
- */
+/* ---------- Cards query ---------- */
 $query = "
-SELECT 
-    cards.id_card,
-    CASE 
-        WHEN cards.price IS NULL OR cards.price <= 0 THEN 1 
-        ELSE cards.price 
+SELECT
+    c.id_card,
+    CASE
+        WHEN c.price IS NULL OR c.price <= 0 THEN 1
+        ELSE c.price
     END AS price,
-    card_templates.card AS card_name,
-    card_templates.description AS description,
-    card_templates.image AS card_image,
+    ct.card AS card_name,
+    ct.description,
+    ct.image,
     t.type AS card_type,
-	r.rarity AS card_rarity,
-	user_cards.id_user AS user_id,
-	users.username AS user_name
-FROM cards
-LEFT JOIN user_cards
-	ON cards.id_card = user_cards.id_card
-LEFT JOIN users
-	ON user_cards.id_user = users.id_user 
-LEFT JOIN card_templates 
-    ON cards.id_card_template = card_templates.id_card_template
-LEFT JOIN card_types t 
-    ON card_templates.id_card_type = t.id_card_type
-LEFT JOIN card_rarities r 
-    ON card_templates.id_card_rarity = r.id_card_rarity
+    r.rarity AS card_rarity,
+    u.id_user AS owner_id,
+    u.username AS owner_name
+FROM cards c
+LEFT JOIN user_cards uc ON c.id_card = uc.id_card
+LEFT JOIN users u ON uc.id_user = u.id_user
+LEFT JOIN card_templates ct ON c.id_card_template = ct.id_card_template
+LEFT JOIN card_types t ON ct.id_card_type = t.id_card_type
+LEFT JOIN card_rarities r ON ct.id_card_rarity = r.id_card_rarity
 ORDER BY price DESC
 ";
 
 $res = mysqli_query($conn, $query);
 if (!$res) {
-    $datos = "<p>Error DB: fallo en la consulta de cartas</p>";
-    writeMain($datos);
+    writeMain("<p>Error DB: fallo en la consulta</p>");
     closeHTML();
     exit;
 }
 
-$cards_html = "<section><h2>Listado de cartas</h2>";
+/* ---------- Render ---------- */
+$html = "<section><h2>Listado de cartas</h2>";
 
 if (mysqli_num_rows($res) === 0) {
-    $cards_html .= "<p>Todavía no hay cartas generadas.</p>";
+    $html .= "<p>No hay cartas.</p>";
 } else {
-    $cards_html .= "<ul>";
+    $html .= "<ul>";
+
     while ($row = mysqli_fetch_assoc($res)) {
+        $id_card = (int)$row["id_card"];
+        $price   = (float)$row["price"];
+        $name    = htmlspecialchars((string)$row["card_name"]);
+        $desc    = nl2br(htmlspecialchars((string)$row["description"]));
+        $type    = htmlspecialchars((string)$row["card_type"]);
+        $rarity  = htmlspecialchars((string)$row["card_rarity"]);
+        $img     = htmlspecialchars((string)$row["image"]);
+        $ownerId = (int)$row["owner_id"];
+        $owner   = htmlspecialchars((string)$row["owner_name"]);
 
-        $id_card  = intval($row["id_card"]);
-        $name     = htmlspecialchars($row["card_name"]);
-        $price    = (float)$row["price"];
-        $desc     = nl2br(htmlspecialchars((string)$row["description"]));
-        $ctype    = htmlspecialchars((string)$row["card_type"]);
-        $crarity  = htmlspecialchars((string)$row["card_rarity"]);
-        $img      = htmlspecialchars((string)$row["card_image"]);
-		$user_id  = htmlspecialchars((string)$row["user_id"]);
-		$user_name= htmlspecialchars((string)$row["user_name"]);
-
-        $cards_html .= "<li><article>
-            <h3>{$name} (ID carta: {$id_card})</h3>
-            <p><strong>Tipo:</strong> {$ctype} — <strong>Rareza:</strong> {$crarity}</p>
+        $html .= "<li><article>
+            <h3>{$name} (ID {$id_card})</h3>
+            <p><strong>Tipo:</strong> {$type} — <strong>Rareza:</strong> {$rarity}</p>
             <p><strong>Precio:</strong> {$price} €</p>
-			<p><strong>Nombre de propietario:</strong> {$user_name} </p>
-			<p><strong>Id del propietario:</strong> {$user_id} </p>";
-        if (!empty($img)) {
-            $cards_html .= "
-            <figure>
-                <img src=\"imgs/{$img}\" alt=\"{$name}\" class=\"card-img\" />
+            <p><strong>Propietario:</strong> {$owner}</p>";
+
+        if ($img) {
+            $html .= "<figure>
+                <img src=\"imgs/{$img}\" alt=\"{$name}\" class=\"card-img\">
             </figure>";
         }
 
-        if (!empty($desc)) {
-            $cards_html .= "<p>{$desc}</p>";
+        if ($desc) {
+            $html .= "<p>{$desc}</p>";
         }
 
-$cards_html .= "
-    <form method=\"POST\" action=\"card_buy.php\">
-        <input type=\"hidden\" name=\"id_user\" value=\"{$user_id}\" />
-        <input type=\"hidden\" name=\"id_card\" value=\"{$id_card}\" />
-        <input type=\"submit\" value=\"Compra!!!!\"/>
-    </form>";
+        /* Show buy button only if logged and not owner */
+        if (
+            isset($_SESSION["id_user"]) &&
+            $ownerId > 0 &&
+            $_SESSION["id_user"] != $ownerId
+        ) {
+            $html .= "
+            <form method=\"POST\" action=\"card_buy.php\">
+                <input type=\"hidden\" name=\"id_user\" value=\"{$ownerId}\">
+                <input type=\"hidden\" name=\"id_card\" value=\"{$id_card}\">
+                <input type=\"submit\" value=\"Comprar\">
+            </form>";
+        }
 
-
-
-        $cards_html .= "</article></li>";
+        $html .= "</article></li>";
     }
-    $cards_html .= "</ul>";
+
+    $html .= "</ul>";
 }
 
-$cards_html .= "</section>";
+$html .= "</section>";
 
-writeMain($cards_html);
+writeMain($html);
 
 mysqli_close($conn);
 closeHTML();
-?>
 

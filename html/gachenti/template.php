@@ -1,109 +1,72 @@
 <?php
 
-function openHTML ($title = "", $id="")
+function openHTML(string $title = "", string $id = ""): void
 {
-
-    if ($title == ""){
+    if ($title === "") {
         $title = "gachENTI: Tu Gacha de cartas de profes de ENTI";
     }
 
-    $html_id = "";
+    $html_id = ($id !== "") ? " id=\"{$id}\"" : "";
 
-    if ($id != ""){
-        $html_id = " id=\"".$id."\"";
-    }
-
-echo <<<EOD
+    echo <<<EOD
 <!doctype html>
-
-<html>
-
+<html lang="es">
 <head>
-
-    <meta charset="utf-8" />
+    <meta charset="utf-8">
     <title>{$title}</title>
-	
-
-	<link rel="stylesheet" href="gachenti.css" />
-
+    <link rel="stylesheet" href="gachenti.css">
 </head>
-
 <body{$html_id}>
 EOD;
-
 }
 
-function writeHeader ()
+function writeHeader(): void
 {
-
-$login_logout = <<<EOD
-
-
-        <li><a href="login.php">Login/Registro</a></li>
-EOD;
-
-
-if (isset($_SESSION["id_user"])){
-
-$login_logout = <<<EOD
-
-
+    /* ---------- Dynamic menu ---------- */
+    if (isset($_SESSION["id_user"])) {
+        $auth_links = <<<EOD
         <li><a href="dashboard.php">Dashboard</a></li>
-        <li><a href="logout.php">Log out/Registro</a></li>
-
+        <li><a href="logout.php">Log out</a></li>
 EOD;
+    } else {
+        $auth_links = <<<EOD
+        <li><a href="login.php">Login / Registro</a></li>
+EOD;
+    }
 
-}
-
-echo <<<EOD
+    echo <<<EOD
 <header>
-
     <h1>gachENTI</h1>
 
-<nav>
+    <nav>
+        <menu>
+            <li><a href="index.php">Portada</a></li>
+            <li><a href="cards.php">Cartas</a></li>
+			<li><a href="cards.php">Compra / Venta</a></li>
 
-    <menu>
-
-        <li><a href="index.php">Portada</a></li>
-        <li><a href="cards.php">Cartas</a></li>
-        <li><a href="shop.php">Compra/Venta</a></li>
-        {$login_logout}
-
-    </menu>
-
-</nav>
-
+            {$auth_links}
+        </menu>
+    </nav>
 </header>
 EOD;
-
 }
 
-function writeMain ($content)
+function writeMain(string $content): void
 {
-
-echo <<<EOD
+    echo <<<EOD
 <main>
 {$content}
 </main>
 EOD;
-
 }
 
-
-function closeHTML ()
+function closeHTML(): void
 {
-
-echo <<<EOD
+    echo <<<EOD
 <footer>
-
 </footer>
-
 </body>
-
 </html>
 EOD;
-
 }
-
-?>
 
